@@ -18,6 +18,14 @@ public class CloudRenderFeature : ScriptableRendererFeature
         public float stepSize = .1f;
         
         public Texture3D tex3D;
+
+        [Header("Noise Settings")] 
+        
+        [Range(0,1)] public float cloudScale = 1;
+        public Vector3 cloudOffset = Vector3.zero;
+        
+        [Range(0,1)] public float densityThreshold = 0;
+        public float densityMultiplier = 1;
     }
 
     /// <summary>
@@ -59,6 +67,12 @@ public class CloudRenderFeature : ScriptableRendererFeature
             settings.material.SetVector("_BoundsMax", settings.boundsMax);
             settings.material.SetTexture("_3DTex", settings.tex3D);
             settings.material.SetFloat("_StepSize", settings.stepSize);
+            
+            settings.material.SetFloat("_CloudScale", settings.cloudScale);
+            settings.material.SetVector("_CloudOffset", settings.cloudOffset);
+            
+            settings.material.SetFloat("_DensityThreshold", settings.densityThreshold);
+            settings.material.SetFloat("_DensityMultiplier", settings.densityMultiplier);
             
             cmd.Blit(source, tempTexture.Identifier());
             cmd.Blit(tempTexture.Identifier(), source, settings.material, 0);

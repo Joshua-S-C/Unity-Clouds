@@ -118,6 +118,10 @@ MonoBehaviour:
     boundsMax: {x: 13.98, y: 5, z: 12.25}
     stepSize: -4.21
     tex3D: {fileID: 11700000, guid: 184df7f8b21b5d543b296618384aaf33, type: 3}
+    cloudScale: 1
+    cloudOffset: {x: 0, y: 0, z: 0}
+    densityThreshold: 0
+    densityMultiplier: 1
 --- !u!114 &7257208535289617387
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,7 +139,11 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: 22edaf53ae714064eaec5a1d18e3c19d, type: 2}
     renderPassEvent: 400
     color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-    boundsMin: {x: -10, y: -10, z: -5}
-    boundsMax: {x: 10, y: 10, z: 5}
+    boundsMin: {x: -10, y: -10, z: -10}
+    boundsMax: {x: 10, y: 10, z: 10}
     stepSize: 0.1
-    tex3D: {fileID: 11700000, guid: f3e08ef436650cd4c8c03aeb5072ff8b, type: 2}
+    tex3D: {fileID: 11700000, guid: f0964483bc3bc9f43bc1f55ccbb55a9c, type: 3}
+    cloudScale: 0.064
+    cloudOffset: {x: 4.81, y: 5, z: 5}
+    densityThreshold: 0.401
+    densityMultiplier: 0.7

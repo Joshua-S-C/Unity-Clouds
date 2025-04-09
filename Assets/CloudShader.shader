@@ -48,11 +48,16 @@ Shader "Cloud"
 
             float3 _BoundsMin, _BoundsMax;
 
-            // Will be useful later
+            // 3D Tex Sampling
+            float _StepSize;
+            
             Texture3D<float4> _3DTex;
             SamplerState sampler_3DTex;
-            float _Alpha;
-            float _StepSize;
+            
+            float _DensityThreshold, _DensityMultiplier;
+            
+            float _CloudScale;
+            float3 _CloudOffset;
 
             #pragma endregion
             
@@ -81,14 +86,10 @@ Shader "Cloud"
             /// </summary>
             float sampleDensity(float3 samplePos)
             {
-                float distFromEdgeX = min(20, min(samplePos.x - _BoundsMin.x, _BoundsMax.x - samplePos.x));
-                float distFromEdgeY = min(20, min(samplePos.y - _BoundsMin.y, _BoundsMax.y - samplePos.y));
-                float distFromEdgeZ = min(20, min(samplePos.z - _BoundsMin.z, _BoundsMax.z - samplePos.z));
-                float edgeWeight = min(distFromEdgeZ,distFromEdgeX)/20;
-
-                float4 noise = _3DTex.SampleLevel(sampler_3DTex, samplePos.xyz, 0.0f);
-                float density = max(0, noise.x);
-                return density * edgeWeight * distFromEdgeY;
+                float3 uvw = samplePos * _CloudScale + _CloudOffset;
+                float4 noise = _3DTex.SampleLevel(sampler_3DTex, uvw.xyz, 0.0f);
+                float density = max(0, noise.r - _DensityThreshold) * _DensityMultiplier;
+                return density;
             }
 
             /// <summary>
@@ -158,7 +159,8 @@ Shader "Cloud"
                 
                 float transmittence = exp(-totalDensity);
 
-                return lerp(_Color, clr, transmittence);
+                //return lerp(_Color, clr, transmittence);
+                return clr * transmittence;
             }
 
             #pragma endregion
