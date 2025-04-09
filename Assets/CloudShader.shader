@@ -18,6 +18,9 @@ Shader "Cloud"
 
             #include "UnityCG.cginc"
             
+            // Step size can't go below this otherwise risk crashing
+            #define MIN_STEP_SIZE .2
+            
             #pragma region Structs
 
             struct appdata
@@ -73,6 +76,40 @@ Shader "Cloud"
                 return float2(distToBox, distInsideBox);
             }
 
+            /// <summary>
+            /// Returns density (red channel) of 3D Tex uniform, at Pos.
+            /// </summary>
+            float sampleDensity(float3 samplePos)
+            {
+                float distFromEdgeX = min(20, min(samplePos.x - _BoundsMin.x, _BoundsMax.x - samplePos.x));
+                float distFromEdgeY = min(20, min(samplePos.y - _BoundsMin.y, _BoundsMax.y - samplePos.y));
+                float distFromEdgeZ = min(20, min(samplePos.z - _BoundsMin.z, _BoundsMax.z - samplePos.z));
+                float edgeWeight = min(distFromEdgeZ,distFromEdgeX)/20;
+
+                float4 noise = _3DTex.SampleLevel(sampler_3DTex, samplePos.xyz, 0.0f);
+                float density = max(0, noise.x);
+                return density * edgeWeight * distFromEdgeY;
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            float densityRayMarch(float3 startPos, float3 dir, float distLimit, float stepSize) {
+                float totalDensity = 0;
+                float dstTravelled = 0;
+                
+                while (dstTravelled < distLimit)
+                {
+                    float3 samplePosition = startPos + dir * dstTravelled;
+                    
+                    totalDensity += sampleDensity(samplePosition) * _StepSize;
+                    
+                    dstTravelled += _StepSize;
+                }
+
+                return totalDensity;
+            }
+            
             #pragma  endregion
             
             #pragma region Shaders
@@ -98,22 +135,30 @@ Shader "Cloud"
                 // Ray setup from camera
                 float3 rayStart = _WorldSpaceCameraPos;
                 float3 rayDir = normalize(i.viewDir);
-
-                // Don't over draw
-                float depthLinear = LinearEyeDepth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv)) * length(i.viewDir);
-                //return depthLinear;
                 
                 // Determine if Frag is in bounding box
                 float2 rayBoxInfo = rayBoxDist(_BoundsMin, _BoundsMax, rayStart, 1/rayDir);
                 float distToBox = rayBoxInfo.x;
                 float distInsideBox = rayBoxInfo.y;
                 
+                // Don't over draw
+                float depthLinear = LinearEyeDepth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv)) * length(i.viewDir);
+                
                 bool rayInBounds = distInsideBox > 0 && distToBox < depthLinear;
                 
-                if(rayInBounds)
-                    return _Color;
+                if(!rayInBounds)
+                    return clr;
 
-                return clr;
+                // Do the thing!
+                float distLimit = min(depthLinear - distToBox, distInsideBox);
+                float3 rayBoxEntryPos = rayStart + rayDir * distToBox;
+                _StepSize = max(MIN_STEP_SIZE, _StepSize);
+
+                float totalDensity = densityRayMarch(rayBoxEntryPos, rayDir, distLimit, _StepSize);
+                
+                float transmittence = exp(-totalDensity);
+
+                return lerp(_Color, clr, transmittence);
             }
 
             #pragma endregion
