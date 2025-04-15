@@ -20,8 +20,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Cloud_Test_Mat
-  m_Shader: {fileID: 4800000, guid: ba20c0ced7c0eca458a3ec68dd4fc160, type: 3}
+  m_Name: TestMat 2
+  m_Shader: {fileID: 4800000, guid: 63c9ac73cfb742ebb2662817acf13a74, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -37,7 +37,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _3DTex:
-        m_Texture: {fileID: 11700000, guid: f0964483bc3bc9f43bc1f55ccbb55a9c, type: 3}
+        m_Texture: {fileID: 11700000, guid: d1e7616ef8f2f0147ad1a86fd6cc7b0c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
@@ -136,7 +136,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 0.94637537, b: 0.8726415, a: 1}
+    - _Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

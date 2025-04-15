@@ -25,7 +25,11 @@ public class CloudRenderFeature : ScriptableRendererFeature
         public Vector3 cloudOffset = Vector3.zero;
         
         [Range(0,1)] public float densityThreshold = 0;
-        public float densityMultiplier = 1;
+        [Min(0)] public float densityMultiplier = 1;
+
+        [Range(0,16)] public int lightSteps = 16;
+
+        public float lightAbsToSun, darkThresh;
     }
 
     /// <summary>
@@ -73,6 +77,10 @@ public class CloudRenderFeature : ScriptableRendererFeature
             
             settings.material.SetFloat("_DensityThreshold", settings.densityThreshold);
             settings.material.SetFloat("_DensityMultiplier", settings.densityMultiplier);
+            
+            settings.material.SetInt("_LightSteps", settings.lightSteps);
+            settings.material.SetFloat("_LightAbsorbtionTowardsSun", settings.lightAbsToSun);
+            settings.material.SetFloat("_DarknessThreshold", settings.darkThresh);
             
             cmd.Blit(source, tempTexture.Identifier());
             cmd.Blit(tempTexture.Identifier(), source, settings.material, 0);

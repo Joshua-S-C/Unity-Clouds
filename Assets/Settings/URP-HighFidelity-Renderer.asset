@@ -122,6 +122,9 @@ MonoBehaviour:
     cloudOffset: {x: 0, y: 0, z: 0}
     densityThreshold: 0
     densityMultiplier: 1
+    lightSteps: 16
+    lightAbsToSun: 0
+    darkThresh: 0
 --- !u!114 &7257208535289617387
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -138,12 +141,15 @@ MonoBehaviour:
   settings:
     material: {fileID: 2100000, guid: 22edaf53ae714064eaec5a1d18e3c19d, type: 2}
     renderPassEvent: 400
-    color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-    boundsMin: {x: -10, y: -10, z: -10}
-    boundsMax: {x: 10, y: 10, z: 10}
+    color: {r: 1, g: 0.94637537, b: 0.8726415, a: 1}
+    boundsMin: {x: -20, y: -10, z: -10}
+    boundsMax: {x: 20, y: 10, z: 30}
     stepSize: 0.1
     tex3D: {fileID: 11700000, guid: f0964483bc3bc9f43bc1f55ccbb55a9c, type: 3}
-    cloudScale: 0.064
+    cloudScale: 0.05
     cloudOffset: {x: 4.81, y: 5, z: 5}
-    densityThreshold: 0.401
-    densityMultiplier: 0.7
+    densityThreshold: 0.283
+    densityMultiplier: 2.22
+    lightSteps: 8
+    lightAbsToSun: 1
+    darkThresh: 5.21

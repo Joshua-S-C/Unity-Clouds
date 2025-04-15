@@ -18,8 +18,9 @@ Shader "Cloud"
 
             #include "UnityCG.cginc"
             
-            // Step size can't go below this otherwise risk crashing
-            #define MIN_STEP_SIZE .2
+            // To prevent crashing
+            #define MIN_DENSITY_STEP_SIZE .2
+            #define MAX_LIGHT_STEPS 16
             
             #pragma region Structs
 
@@ -59,6 +60,10 @@ Shader "Cloud"
             float _CloudScale;
             float3 _CloudOffset;
 
+            int _LightSteps;
+
+            float _LightAbsorbtionTowardsSun, _DarknessThreshold;
+
             #pragma endregion
             
             #pragma region Helper Functions
@@ -93,27 +98,62 @@ Shader "Cloud"
             }
 
             /// <summary>
-            /// 
+            /// Returns amount of light at pixel.
+            /// Marches towards light, and towards viewer (forward scattering)
+            /// Used by densityRayMarch
             /// </summary>
-            float densityRayMarch(float3 startPos, float3 dir, float distLimit, float stepSize) {
+            float lightRayMarch(float3 pos)
+            {
+                float3 dirToLight = _WorldSpaceLightPos0.xyz;
+                float distInsideBox = rayBoxDist(_BoundsMin, _BoundsMax, pos, 1 / dirToLight).y;
+
+                float stepSize = distInsideBox / _LightSteps;
+                
                 float totalDensity = 0;
+                for (int step = 0; step < _LightSteps; step++)
+                {
+                    pos += dirToLight * stepSize;
+                    
+                    totalDensity += max(0, sampleDensity(pos) * stepSize);
+                }
+                float transmittance = exp(-totalDensity * _LightAbsorbtionTowardsSun);
+                return _DarknessThreshold + transmittance * (1 - _DarknessThreshold);
+            }
+            
+            /// <summary>
+            /// Float[0] = Transmittance. Float[1] = Light Energy
+            /// </summary>
+            float2 densityRayMarch(float3 startPos, float3 dir, float distLimit, float stepSize) {
+                float transmittance = 1;
+                float lightEnergy = 0;
                 float dstTravelled = 0;
                 
                 while (dstTravelled < distLimit)
                 {
                     float3 samplePosition = startPos + dir * dstTravelled;
-                    
-                    totalDensity += sampleDensity(samplePosition) * _StepSize;
+                    float density = sampleDensity(samplePosition) * _StepSize;
+
+                    if (density > 0)
+                    {
+                        float lightTransmittance = lightRayMarch(samplePosition);
+                        lightEnergy += density * _StepSize * lightTransmittance;
+
+                        transmittance *= exp(-density * _StepSize);
+                        
+                        if (transmittance < .01f)
+                            break;
+                    }
                     
                     dstTravelled += _StepSize;
                 }
 
-                return totalDensity;
+                return float2(transmittance, lightEnergy);
             }
-            
-            #pragma  endregion
+
+            #pragma endregion
             
             #pragma region Shaders
+            
             v2f vert (appdata v)
             {
                 v2f o;
@@ -153,14 +193,25 @@ Shader "Cloud"
                 // Do the thing!
                 float distLimit = min(depthLinear - distToBox, distInsideBox);
                 float3 rayBoxEntryPos = rayStart + rayDir * distToBox;
-                _StepSize = max(MIN_STEP_SIZE, _StepSize);
+                _StepSize = max(MIN_DENSITY_STEP_SIZE, _StepSize);
+                _LightSteps = min(MAX_LIGHT_STEPS, _LightSteps);
 
-                float totalDensity = densityRayMarch(rayBoxEntryPos, rayDir, distLimit, _StepSize);
+                float2 rayMarchResults = densityRayMarch(rayBoxEntryPos, rayDir, distLimit, _StepSize);
+                float transmittance = rayMarchResults.x;
+                float lightEnergy = rayMarchResults.y;
                 
-                float transmittence = exp(-totalDensity);
+                //float transmittence = exp(-totalDensity);
+                //float4 cloudClr = lerp(_Color, clr, lightEnergy);
+                float4 cloudClr = lightEnergy * float4(unity_LightColor0, 1);
+                
+                ///return cloudClr;
 
-                //return lerp(_Color, clr, transmittence);
-                return clr * transmittence;
+                //return float4(lerp(cloudClr, clr, transmittance));
+
+                return lerp(0, clr, transmittance) + cloudClr;
+                
+                return lerp(cloudClr, clr, transmittance);
+                //return clr * transmittance;
             }
 
             #pragma endregion
