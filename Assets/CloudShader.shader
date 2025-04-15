@@ -136,7 +136,7 @@ Shader "Cloud"
                     if (density > 0)
                     {
                         float lightTransmittance = lightRayMarch(samplePosition);
-                        lightEnergy += density * _StepSize * lightTransmittance;
+                        lightEnergy += density * transmittance * _StepSize * lightTransmittance;
 
                         transmittance *= exp(-density * _StepSize);
                         
@@ -171,7 +171,7 @@ Shader "Cloud"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                fixed4 clr = tex2D(_MainTex, i.uv);
+                fixed4 bgClr = tex2D(_MainTex, i.uv);
 
                 // Ray setup from camera
                 float3 rayStart = _WorldSpaceCameraPos;
@@ -188,7 +188,7 @@ Shader "Cloud"
                 bool rayInBounds = distInsideBox > 0 && distToBox < depthLinear;
                 
                 if(!rayInBounds)
-                    return clr;
+                    return bgClr;
 
                 // Do the thing!
                 float distLimit = min(depthLinear - distToBox, distInsideBox);
@@ -200,25 +200,10 @@ Shader "Cloud"
                 float transmittance = rayMarchResults.x;    // Beer-Lambert is accounted for
                 float lightEnergy = rayMarchResults.y;      // 
                 
-                //float transmittence = exp(-totalDensity);
-
-                //return lerp(1, clr, transmittance);
+                float4 cloudClr = lightEnergy * _Color;
+                float3 clr = bgClr * transmittance + cloudClr;
                 
-                //float4 cloudClr = lerp(_Color, clr, lightEnergy);
-                //float4 cloudClr = lightEnergy * float4(unity_LightColor0, 1);
-                float4 cloudClr = float4(lightEnergy, lightEnergy, lightEnergy, lightEnergy);
-                
-                return cloudClr;
-
-                //return float4(lerp(cloudClr, clr, transmittance));
-
-                //return lerp(1, clr, transmittance) + cloudClr;
-
-                // Unlit output
-                return lerp(1, clr, transmittance);
-                
-                return lerp(cloudClr, clr, transmittance);
-                //return clr * transmittance;
+                return float4(clr,1);
             }
 
             #pragma endregion

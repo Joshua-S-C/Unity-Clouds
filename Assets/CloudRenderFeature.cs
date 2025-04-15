@@ -29,7 +29,11 @@ public class CloudRenderFeature : ScriptableRendererFeature
 
         [Range(0,16)] public int lightSteps = 16;
 
-        public float lightAbsToSun, darkThresh;
+        [Range(0,1)]
+        public float lightAbsToSun;
+        
+        [Range(0,1)]
+        public float darkThresh;
     }
 
     /// <summary>
