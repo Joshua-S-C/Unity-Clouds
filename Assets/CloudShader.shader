@@ -99,7 +99,7 @@ Shader "Cloud"
 
             /// <summary>
             /// Returns amount of light at pixel.
-            /// Marches towards light, and towards viewer (forward scattering)
+            /// Marches towards light, and towards viewer (forward scattering) <-- not done yet
             /// Used by densityRayMarch
             /// </summary>
             float lightRayMarch(float3 pos)
@@ -197,18 +197,25 @@ Shader "Cloud"
                 _LightSteps = min(MAX_LIGHT_STEPS, _LightSteps);
 
                 float2 rayMarchResults = densityRayMarch(rayBoxEntryPos, rayDir, distLimit, _StepSize);
-                float transmittance = rayMarchResults.x;
-                float lightEnergy = rayMarchResults.y;
+                float transmittance = rayMarchResults.x;    // Beer-Lambert is accounted for
+                float lightEnergy = rayMarchResults.y;      // 
                 
                 //float transmittence = exp(-totalDensity);
-                //float4 cloudClr = lerp(_Color, clr, lightEnergy);
-                float4 cloudClr = lightEnergy * float4(unity_LightColor0, 1);
+
+                //return lerp(1, clr, transmittance);
                 
-                ///return cloudClr;
+                //float4 cloudClr = lerp(_Color, clr, lightEnergy);
+                //float4 cloudClr = lightEnergy * float4(unity_LightColor0, 1);
+                float4 cloudClr = float4(lightEnergy, lightEnergy, lightEnergy, lightEnergy);
+                
+                return cloudClr;
 
                 //return float4(lerp(cloudClr, clr, transmittance));
 
-                return lerp(0, clr, transmittance) + cloudClr;
+                //return lerp(1, clr, transmittance) + cloudClr;
+
+                // Unlit output
+                return lerp(1, clr, transmittance);
                 
                 return lerp(cloudClr, clr, transmittance);
                 //return clr * transmittance;
