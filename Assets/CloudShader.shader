@@ -45,24 +45,23 @@ Shader "Cloud"
             sampler2D _CameraDepthTexture;
             
             float4 _Color;
-            float4 _MainTex_ST; // Unity specific
-
+            float4 _MainTex_ST; // Unity specific thing
             float3 _BoundsMin, _BoundsMax;
-
+            
             // 3D Tex Sampling
             float _StepSize;
-            
             Texture3D<float4> _3DTex;
             SamplerState sampler_3DTex;
-            
+
+            // Shape Settings
             float _DensityThreshold, _DensityMultiplier;
-            
             float _CloudScale;
             float3 _CloudOffset;
 
+            // Lighting
             int _LightSteps;
-
             float _LightAbsorbtionTowardsSun, _DarknessThreshold;
+            float _ForwardScatteringK, _BackwardsScatteringK, _BaseBrightness, _PhaseFactor;
 
             #pragma endregion
             
@@ -84,6 +83,25 @@ Shader "Cloud"
                 float distInsideBox = max(0, dstB - distToBox);
                 
                 return float2(distToBox, distInsideBox);
+            }
+
+            /// <summary>
+            /// The ever so mathful
+            /// </summary>
+            float henyeyGreenstein(float a, float g) {
+                float g2 = g*g;
+                return (1-g2) / (4*3.1415*pow(1+g2-2*g*(a), 1.5));
+            }
+
+            /// <summary>
+            /// The phase function using HG
+            /// </summary>
+            float phase(float a) {
+                float blend = .5;
+                float hgBlend =
+                    henyeyGreenstein(a,_ForwardScatteringK) * (1 - blend) +
+                    henyeyGreenstein(a,-_BackwardsScatteringK) * blend;
+                return _BaseBrightness + hgBlend * _PhaseFactor;
             }
 
             /// <summary>
@@ -123,7 +141,7 @@ Shader "Cloud"
             /// <summary>
             /// Float[0] = Transmittance. Float[1] = Light Energy
             /// </summary>
-            float2 densityRayMarch(float3 startPos, float3 dir, float distLimit, float stepSize) {
+            float2 densityRayMarch(float3 startPos, float3 dir, float distLimit, float stepSize, float phaseVal) {
                 float transmittance = 1;
                 float lightEnergy = 0;
                 float dstTravelled = 0;
@@ -136,7 +154,7 @@ Shader "Cloud"
                     if (density > 0)
                     {
                         float lightTransmittance = lightRayMarch(samplePosition);
-                        lightEnergy += density * transmittance * _StepSize * lightTransmittance;
+                        lightEnergy += density * transmittance * _StepSize * lightTransmittance * phaseVal;
 
                         transmittance *= exp(-density * _StepSize);
                         
@@ -190,13 +208,19 @@ Shader "Cloud"
                 if(!rayInBounds)
                     return bgClr;
 
+
+                // Phase Function calc
+                float raySunAngle = dot(rayDir, _WorldSpaceLightPos0.xyz);
+                float phaseVal = phase(raySunAngle);
+
+                
                 // Do the thing!
                 float distLimit = min(depthLinear - distToBox, distInsideBox);
                 float3 rayBoxEntryPos = rayStart + rayDir * distToBox;
                 _StepSize = max(MIN_DENSITY_STEP_SIZE, _StepSize);
                 _LightSteps = min(MAX_LIGHT_STEPS, _LightSteps);
 
-                float2 rayMarchResults = densityRayMarch(rayBoxEntryPos, rayDir, distLimit, _StepSize);
+                float2 rayMarchResults = densityRayMarch(rayBoxEntryPos, rayDir, distLimit, _StepSize, phaseVal);
                 float transmittance = rayMarchResults.x;    // Beer-Lambert is accounted for
                 float lightEnergy = rayMarchResults.y;      // 
                 

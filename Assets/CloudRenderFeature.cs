@@ -29,11 +29,20 @@ public class CloudRenderFeature : ScriptableRendererFeature
 
         [Range(0,16)] public int lightSteps = 16;
 
-        [Range(0,1)]
-        public float lightAbsToSun;
+        [Range(0,1)] public float lightAbsToSun;
         
-        [Range(0,1)]
-        public float darkThresh;
+        [Range(0,1)] public float darkThresh;
+
+        [Header("Phase Settings")]
+        
+        [Range(0, 1), Tooltip("How much influence the follow actually have on lighting")] public float phaseFactor;
+        
+        [Range(0,.9f)] public float forwardScatteringK;
+        
+        [Range(0,.9f)] public float backwardScatteringK;
+        
+        [Range(0,1)] public float baseBrightness;
+
     }
 
     /// <summary>
@@ -85,6 +94,11 @@ public class CloudRenderFeature : ScriptableRendererFeature
             settings.material.SetInt("_LightSteps", settings.lightSteps);
             settings.material.SetFloat("_LightAbsorbtionTowardsSun", settings.lightAbsToSun);
             settings.material.SetFloat("_DarknessThreshold", settings.darkThresh);
+            
+            settings.material.SetFloat("_ForwardScatteringK", settings.forwardScatteringK);
+            settings.material.SetFloat("_BackwardsScatteringK", settings.backwardScatteringK);
+            settings.material.SetFloat("_BaseBrightness", settings.baseBrightness);
+            settings.material.SetFloat("_PhaseFactor", settings.phaseFactor);
             
             cmd.Blit(source, tempTexture.Identifier());
             cmd.Blit(tempTexture.Identifier(), source, settings.material, 0);

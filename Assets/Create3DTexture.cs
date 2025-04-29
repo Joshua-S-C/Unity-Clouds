@@ -207,4 +207,79 @@ public class Create3DTexture : MonoBehaviour
 
         AssetDatabase.CreateAsset(tex, "Assets/Worley_Test.asset");
     }
+    
+    
+    [MenuItem("3DTextures/2D Worley")]
+    static void Create3DTexture_Worley_2D()
+    {
+        // Texture setup
+        int size = 64;
+        TextureFormat format = TextureFormat.RGBA32;
+        TextureWrapMode wrapMode = TextureWrapMode.Clamp;
+
+        Texture2D tex = new Texture2D(size * size, size, format, false);
+        tex.wrapMode = wrapMode;
+
+        Color[] colors = new Color[size * size * size];
+
+        float maxDist = size * .5f;
+        
+        // Worley Setup
+        int subdivs = 2;
+        List<Vector3> points = new List<Vector3>();
+        points.Capacity = subdivs * subdivs * subdivs;
+        float sectionSize = (float)size / subdivs;            
+        
+        for (int x = 0; x < subdivs; x++)
+        {
+            for (int y = 0; y < subdivs; y++)
+            {
+                for (int z = 0; z < subdivs; z++)
+                {
+                    Vector3 origin = Vector3.zero;
+                    
+                    origin.x = Mathf.Lerp(x * sectionSize, (x + 1) * sectionSize, Random.Range(0f, 1f));
+                    origin.y = Mathf.Lerp(y * sectionSize, (y + 1) * sectionSize, Random.Range(0f, 1f));
+                    origin.z = Mathf.Lerp(z * sectionSize, (z + 1) * sectionSize, Random.Range(0f, 1f));
+                    
+                    points.Add(origin);
+                }
+            }
+        }
+        
+        foreach (var point in points)
+            Debug.Log(point.ToString());
+        
+        // Populate the array so that the x, y, and z values of the texture map to red, blue, and green colors
+        float inverseResolution = 1.0f / (size - 1.0f);
+        
+        for (int z = 0; z < size; z++)
+        {
+            int zOffset = z * size * size;
+            for (int y = 0; y < size; y++)
+            {
+                int yOffset = y * size;
+                for (int x = 0; x < size; x++)
+                {
+                    List<float> distVals = new List<float>();
+
+                    foreach (var point in points)
+                        distVals.Add(Vector3.Distance(new Vector3(x,y,z), point));
+
+                    float dist = distVals.Min(dist => dist);
+                    float invLerp = Mathf.InverseLerp(0, maxDist, dist);
+                    float val = Mathf.Lerp(0, 1, invLerp);
+                    val = 1 - val;
+                    
+                    colors[x + yOffset + zOffset] = new Color(val, val, val, 1.0f);
+                }
+            }
+        }
+
+        tex.SetPixels(colors);
+
+        tex.Apply();
+
+        AssetDatabase.CreateAsset(tex, "Assets/Worley_2D_Test.asset");
+    }
 }

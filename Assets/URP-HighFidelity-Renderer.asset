@@ -125,6 +125,10 @@ MonoBehaviour:
     lightSteps: 16
     lightAbsToSun: 0
     darkThresh: 0
+    phaseFactor: 0
+    forwardScatteringK: 0
+    backwardScatteringK: 0
+    baseBrightness: 0
 --- !u!114 &7257208535289617387
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -145,11 +149,15 @@ MonoBehaviour:
     boundsMin: {x: -75, y: -39.4, z: -11.4}
     boundsMax: {x: 44.7, y: 13.11, z: 143.2}
     stepSize: 0.1
-    tex3D: {fileID: 11700000, guid: f0964483bc3bc9f43bc1f55ccbb55a9c, type: 3}
+    tex3D: {fileID: 11700000, guid: e86ae2f6bc685f14b91abf07281cebe4, type: 3}
     cloudScale: 0.018
-    cloudOffset: {x: 11.47, y: 5, z: 5}
-    densityThreshold: 0.526
+    cloudOffset: {x: 0, y: 0, z: 0}
+    densityThreshold: 0.501
     densityMultiplier: 7.89
-    lightSteps: 16
-    lightAbsToSun: 0.079
-    darkThresh: 0
+    lightSteps: 8
+    lightAbsToSun: 0.021
+    darkThresh: 0.061
+    phaseFactor: 0.376
+    forwardScatteringK: 0.839
+    backwardScatteringK: 0.468
+    baseBrightness: 0.757
